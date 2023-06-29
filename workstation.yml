@@ -1,0 +1,56 @@
+# Configure local environment
+---
+- name: Configure localhost
+  hosts: localhost
+    
+#  user: root
+  tasks:    
+  
+  - name: Load secrets for workstation
+    ansible.builtin.include_vars:
+      dir: vars/workstation
+
+  
+  - name: Ensure directories exist
+    ansible.builtin.file:
+      path: "{{ item['destPath'] }}"
+      state: directory
+    with_items: "{{ workstation_upload['tmpDirectories'] + workstation_upload['directories']}}"
+      
+  - name: Ensure files & tmp files exist
+    ansible.builtin.copy:
+      backup: "{{ item['backup'] }}"
+      src: "{{ item['srcPath'] }}"
+      dest: "{{ item['destPath'] }}"
+      mode: "{{ item['mode'] }}"
+    with_items: "{{ workstation_upload['tmpFiles'] + workstation_upload['files'] }}"
+  
+  - name: Apply GitHub GPG private key
+    ansible.builtin.command: "gpg --batch
+                --passphrase {{ github_gpg_passphrase }}
+                --pinentry-mode loopback
+                --import {{ workstation_github['tmp_gpg_path'] }}"
+    no_log: true
+                 
+  - name: Proper Git setting present
+    community.general.git_config:
+      name: "{{ item['property'] }}"
+      scope: global
+      value: "{{ item['value'] }}"
+    with_items: "{{ workstation_github['properties'] }}"
+  
+  - name: Ensure GitHub repositories are present
+    ansible.builtin.git: 
+      dest: ~/Projects/{{ item }}
+      repo: git@github.com:ssongin/{{ item }}.git
+      #repo: https://github.com/ssongin/{{ item }}.git  
+      accept_newhostkey: true
+      key_file: ~/.ssh/id_ed25519
+    with_items: "{{ workstation_github['repositories'] }}"
+    
+  - name: Clean tmp files
+    ansible.builtin.file:
+      path: "{{ item['destPath'] }}"
+      state: absent
+    with_items: "{{ workstation_upload['tmpFiles'] + workstation_upload['tmpDirectories'] }}"
+      

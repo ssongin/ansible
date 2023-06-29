@@ -1,0 +1,46 @@
+workstation_upload:
+  directories:
+    - destPath: ~/.ssh
+    - destPath: ~/Projects
+  tmpDirectories:
+    - destPath: ~/tmp_ansible
+  files:
+    - srcPath: ./workstation/ssh_git_key
+      destPath: ~/.ssh/id_ed25519
+      mode: "0600"
+      backup: true
+    - srcPath: ./workstation/ssh_config
+      destPath: ~/.ssh/config
+      mode: "0600"
+      backup: true
+  tmpFiles:
+    - srcPath: ./workstation/gpg.key
+      destPath: ~/tmp_ansible/gpg_github.key
+      mode: "0600"
+      backup: true
+workstation_github:
+  tmp_gpg_path: ~/tmp_ansible/gpg_github.key
+  properties:
+    - property: user.name
+      value: Stanislav Songin
+    - property: user.email
+      value: ssongin@gmail.com
+    - property: user.signingkey
+      value: 81FCBB4EE65A124B
+    - property: commit.gpgsign
+      value: true
+    - property: tag.gpgsign
+      value: true
+    - property: gpg.program
+      value: /usr/bin/gpg
+  repositories:
+  - ansible
+  - bare_metal
+  - degrad.solutions
+  - notes
+  - argocd
+  - tools-dev_page
+  - stock_analyzer
+  - sb-extension
+  - chrome_extension
+  - charon
